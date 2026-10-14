@@ -1,1 +1,173 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#090d1b">
+<title>REALM ONLINE — Echoes of Aether</title>
+<style>
+:root{--cyan:#73e7ff;--gold:#ffc96b;--panel:rgba(8,14,29,.88);--line:rgba(132,204,255,.25)}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#070b15;color:#f3f7ff;font-family:Inter,system-ui,Arial,sans-serif}canvas{display:block}
+#game{position:fixed;inset:0}#ui{position:fixed;inset:0;pointer-events:none}
+.panel{background:var(--panel);border:1px solid var(--line);box-shadow:0 10px 35px #0007;backdrop-filter:blur(12px);border-radius:14px}
+#topbar{position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+#identity{padding:10px 13px;min-width:190px}#identity b{color:var(--cyan);letter-spacing:1.5px;font-size:13px}#identity .sub{font-size:11px;color:#a9bad4;margin-top:3px}
+#stats{margin-top:8px;width:190px} .bar{height:8px;border-radius:8px;background:#253147;overflow:hidden;margin-top:5px}.fill{height:100%;width:100%;transition:width .15s}.hp{background:linear-gradient(90deg,#ff476e,#ff8e7a)}.xp{background:linear-gradient(90deg,#54d9ff,#b3f7ff)}
+#hudright{display:flex;gap:8px;align-items:flex-start} .tiny{padding:9px 11px;font-size:12px;color:#dceaff}
+#quest{position:absolute;top:120px;right:12px;width:220px;padding:12px;font-size:12px}#quest h3{margin:0 0 8px;color:var(--gold);font-size:12px;letter-spacing:1px}#quest p{margin:5px 0;color:#c6d4e9;line-height:1.45}
+#feed{position:absolute;left:14px;top:145px;width:min(290px,55vw);font-size:12px;color:#d5e5fa;text-shadow:0 1px 3px #000;line-height:1.5}
+#feed div{animation:fade 7s forwards}@keyframes fade{0%,75%{opacity:1}100%{opacity:0}}
+#bottom{position:absolute;left:50%;bottom:15px;transform:translateX(-50%);display:flex;align-items:end;gap:8px}
+.action{pointer-events:auto;border:1px solid #8ddfff55;color:#eafaff;background:linear-gradient(145deg,#1b3554dd,#0b1729ee);border-radius:13px;min-width:56px;height:55px;padding:6px 9px;font-weight:800;box-shadow:0 5px 18px #0006;touch-action:none}
+.action span{display:block;font-size:10px;font-weight:500;color:#9ebbd4;margin-top:3px}.action:active,.action.active{border-color:var(--cyan);background:#15516a}
+#mobileControls{display:none;position:absolute;inset:0;pointer-events:none}
+#stick{position:absolute;left:18px;bottom:30px;width:118px;height:118px;border:1px solid #9edfff55;background:#07152688;border-radius:50%;pointer-events:auto;touch-action:none}
+#nub{position:absolute;width:48px;height:48px;left:34px;top:34px;border-radius:50%;background:#79dcff88;border:1px solid #b5f2ff;box-shadow:0 0 18px #4bdcff44}
+#mobileActions{position:absolute;right:15px;bottom:30px;display:flex;gap:8px;align-items:end;pointer-events:auto}
+#mobileActions .action{min-width:57px;height:57px;border-radius:50%;font-size:11px}
+#modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:18px;background:radial-gradient(ellipse at center,#111d36aa,#030611ed);z-index:5}
+#card{width:min(470px,100%);padding:26px;background:linear-gradient(150deg,#101e34f5,#080d1bf5);border:1px solid #6bdfff55;border-radius:22px;box-shadow:0 20px 80px #000b}
+.logo{font-size:12px;letter-spacing:5px;color:var(--cyan);font-weight:900}.hero{font-size:clamp(30px,7vw,47px);line-height:.98;font-weight:950;letter-spacing:-1.5px;margin:12px 0}.hero em{font-style:normal;color:var(--gold)}.desc{color:#aebfd8;font-size:13px;line-height:1.6}
+input{width:100%;margin:17px 0 10px;padding:14px 15px;border-radius:11px;background:#050a15;border:1px solid #34506e;color:white;font-size:15px;outline:none}
+.primary{width:100%;padding:14px;border:0;border-radius:11px;color:#06101a;font-weight:900;font-size:14px;background:linear-gradient(90deg,#7beaff,#ffc96b);cursor:pointer}
+.features{display:flex;gap:7px;flex-wrap:wrap;margin:16px 0}.chip{font-size:10px;border:1px solid #4a6c8b88;padding:6px 8px;border-radius:30px;color:#c8d8ec}
+#inventory{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(360px,90vw);padding:17px;display:none;pointer-events:auto}#inventory h3{margin:0 0 12px;color:var(--gold)}.item{padding:10px;border:1px solid #34516e;border-radius:9px;margin-top:7px;font-size:12px;display:flex;justify-content:space-between}
+#chatbox{position:absolute;bottom:83px;left:14px;display:flex;gap:5px;pointer-events:auto;width:min(270px,60vw)}#chat{margin:0;padding:8px 10px;font-size:12px}
+#notice{position:absolute;top:24%;left:50%;transform:translateX(-50%);font-size:15px;font-weight:900;color:#ffe4a0;text-shadow:0 2px 9px #000;white-space:nowrap}
+@media(max-width:700px){#quest{top:112px;width:165px;padding:9px;font-size:10px}#identity{min-width:150px;padding:9px;width:165px}#stats{width:145px}#hudright .tiny{font-size:10px;padding:8px}#bottom{display:none}#mobileControls{display:block}#chatbox{bottom:155px;width:180px}#feed{top:135px;font-size:10px;width:48vw}#notice{top:30%;font-size:12px}}
+</style>
+</head>
+<body>
+<div id="game"></div>
+<div id="ui">
+ <div id="topbar">
+  <div class="panel" id="identity"><b>REALM ONLINE</b><div id="playerLabel">Adventurer · Lv. 1</div><div class="sub" id="zoneLabel">AETHERWOOD — SAFE ZONE</div>
+   <div id="stats"><div style="display:flex;justify-content:space-between;font-size:10px"><span>HP</span><span id="hpText">100 / 100</span></div><div class="bar"><div id="hpFill" class="fill hp"></div></div><div style="display:flex;justify-content:space-between;font-size:10px;margin-top:5px"><span>XP</span><span id="xpText">0 / 100</span></div><div class="bar"><div id="xpFill" class="fill xp" style="width:0%"></div></div></div>
+  </div>
+  <div id="hudright"><div class="panel tiny" id="playersCount">👥 1 online</div><div class="panel tiny" id="goldText">🪙 0</div><button class="action" style="height:38px;min-width:42px" id="invBtn">BAG</button></div>
+ </div>
+ <div class="panel" id="quest"><h3>✦ ADVENTURE LOG</h3><b id="questTitle">A Small Beginning</b><p id="questDesc">Kalahkan 3 Slime di hutan untuk membuktikan kemampuanmu.</p><p id="questProgress">Slime dikalahkan: 0 / 3</p><p style="color:#7ee8ff">Reward: 60 XP · 25 Gold</p></div>
+ <div id="feed"></div><div id="notice"></div>
+ <div class="panel" id="inventory"><h3>🎒 Adventurer's Bag</h3><div class="item"><span>🗡️ Rusty Blade</span><b>Equipped</b></div><div class="item"><span>🧪 Minor Potion</span><b id="potionCount">3x</b></div><div class="item"><span>💎 Slime Core</span><b id="coreCount">0x</b></div><div class="item"><span>🪙 Gold</span><b id="bagGold">0</b></div><p style="font-size:11px;color:#9fb2cc">Tekan I atau tombol BAG untuk menutup.</p><button class="primary" id="potionBtn">GUNAKAN POTION (+40 HP)</button></div>
+ <div id="bottom"><button class="action" id="attackBtn">⚔️<span>ATTACK</span></button><button class="action" id="skillBtn">✦<span>ARCANE BURST</span></button><button class="action" id="dodgeBtn">➤<span>DODGE</span></button><button class="action" id="potionBtn2">🧪<span>POTION</span></button><button class="action" id="jumpBtn">↑<span>JUMP</span></button></div>
+ <div id="mobileControls"><div id="stick"><div id="nub"></div></div><div id="mobileActions"><button class="action" id="mAttack">⚔️<span>HIT</span></button><button class="action" id="mSkill">✦<span>SKILL</span></button><button class="action" id="mDodge">➤<span>DODGE</span></button></div></div>
+ <div id="chatbox"><input id="chat" placeholder="Enter untuk chat..." maxlength="100"><button class="action" id="sendChat" style="height:37px;min-width:45px">➤</button></div>
+</div>
+<div id="modal"><div id="card"><div class="logo">AETHER NETWORKS PRESENTS</div><div class="hero">REALM<br><em>ONLINE</em></div><div class="desc">Masuki dunia fantasi 3D yang hidup. Bertarung melawan monster, kumpulkan loot, naik level, dan petualangan bareng pemain lain secara online.</div><div class="features"><span class="chip">🌐 MULTIPLAYER</span><span class="chip">⚔️ ACTION RPG</span><span class="chip">🐲 MONSTER HUNT</span><span class="chip">✨ SKILLS & LOOT</span></div><input id="nameInput" maxlength="16" placeholder="Nama adventurer..." value="Adventurer"><button class="primary" id="playBtn">ENTER THE REALM →</button><div class="desc" style="font-size:10px;margin-top:12px">Butuh koneksi internet. Multiplayer aktif jika server Node.js sudah dijalankan.</div></div></div>
+<script src="/socket.io/socket.io.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"></script>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
 
+const $=id=>document.getElementById(id);
+const socket=io();
+let scene,camera,renderer,clock,me,playerMesh,sword,started=false,level=1,xp=0,hp=100,maxHp=100,gold=0,potions=3,cores=0,kills=0;
+let skillCooldown=0,attackCooldown=0,dodgeTime=0,invuln=0,chatCooldown=0;
+const players=new Map(),enemies=new Map(),keys={},move={x:0,z:0};
+const WORLD=58;
+const mat=(color,roughness=.8,metalness=0)=>new THREE.MeshStandardMaterial({color,roughness,metalness});
+const mats={grass:mat(0x1c4938),grass2:mat(0x2c6046),stone:mat(0x586477),bark:mat(0x523a2d),leaf:mat(0x21694c),leaf2:mat(0x3d9363),gold:mat(0xffc766,.35,.5),blue:mat(0x55dfff,.3,.2),skin:mat(0xf2bd8c),armor:mat(0x2e5477,.45,.4),dark:mat(0x111827),slime:mat(0x73e65f,.35),slime2:mat(0xb2ff76,.3),red:mat(0xff5577),white:mat(0xe7f6ff)};
+function box(w,h,d,material,x,y,z,parent=scene){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;parent.add(o);return o}
+function sphere(r,material,x,y,z,parent=scene){const o=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),material);o.position.set(x,y,z);o.castShadow=true;parent.add(o);return o}
+function capsuleLike(material){const g=new THREE.Group();scene.add(g);const body=sphere(.34,material,0,.85,0,g);body.scale.set(.78,1.15,.56);sphere(.23,mats.skin,0,1.55,0,g);box(.12,.46,.13,mats.armor,-.22,.35,0,g);box(.12,.46,.13,mats.armor,.22,.35,0,g);box(.12,.46,.13,mats.armor,-.39,.88,0,g);box(.12,.46,.13,mats.armor,.39,.88,0,g);const blade=box(.07,.72,.11,mats.gold,.55,1.03,.02,g);blade.rotation.z=-.45;return g}
+function init(){
+ scene=new THREE.Scene();scene.background=new THREE.Color(0x8cc5df);scene.fog=new THREE.Fog(0x8cc5df,38,105);
+ camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,300);
+ renderer=new THREE.WebGLRenderer({antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,1.7));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;$('game').appendChild(renderer.domElement);
+ clock=new THREE.Clock();
+ scene.add(new THREE.HemisphereLight(0xc8edff,0x243b30,2.0));
+ const sun=new THREE.DirectionalLight(0xffe4bd,2.2);sun.position.set(-22,35,15);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);scene.add(sun);
+ const ground=new THREE.Mesh(new THREE.PlaneGeometry(180,180),mats.grass);ground.rotation.x=-Math.PI/2;ground.receiveShadow=true;scene.add(ground);
+ // Ancient stone road
+ const road=box(7,.08,125,mat(0x6c786e),0,.02,-5);road.material.roughness=1;
+ for(let i=0;i<130;i++){let x=(Math.random()-.5)*120,z=(Math.random()-.5)*120;if(Math.abs(x)<5)continue;const tree=new THREE.Group();tree.position.set(x,0,z);scene.add(tree);box(.55,2.5,.55,mats.bark,0,1.2,0,tree);sphere(1.5,mats.leaf,0,3,0,tree);sphere(1.1,mats.leaf2,.55,3.35,.2,tree);sphere(1.0,mats.leaf,-.55,3.3,-.2,tree)}
+ // ancient ruins / spawn shrine
+ for(let i=0;i<8;i++){let a=i*Math.PI/4;const p=box(.7,2.4,.7,mat(0x8596a0,.8),Math.cos(a)*5,1.2,Math.sin(a)*5);p.rotation.y=a}
+ const ring=new THREE.Mesh(new THREE.TorusGeometry(3.8,.09,8,48),mats.gold);ring.rotation.x=Math.PI/2;ring.position.y=.12;scene.add(ring);
+ for(let i=0;i<28;i++){let x=(Math.random()-.5)*90,z=-10-Math.random()*75;spawnEnemyLocal('slime',x,z,Math.random()<.13?2:1)}
+ me={id:null,name:'Adventurer',pos:new THREE.Vector3(0,0,9),rot:0};
+ playerMesh=capsuleLike(mats.armor);playerMesh.position.copy(me.pos);
+ // floating name/level label rendered as sprite canvas
+ addLabel(playerMesh,'YOU',0x7beaff);
+ addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+ animate();
+}
+function addLabel(parent,text,color=0xffffff){const c=document.createElement('canvas');c.width=256;c.height=64;const ctx=c.getContext('2d');ctx.fillStyle='#07101bcc';ctx.beginPath();ctx.roundRect(10,8,236,48,18);ctx.fill();ctx.strokeStyle='#8ceaff';ctx.lineWidth=2;ctx.stroke();ctx.font='bold 23px Arial';ctx.textAlign='center';ctx.fillStyle='#ffffff';ctx.fillText(text,128,39);const tex=new THREE.CanvasTexture(c);const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));sp.scale.set(2.2,.55,1);sp.position.y=2.2;parent.add(sp);return sp}
+function spawnEnemyLocal(type,x,z,rank=1,id='local'+Math.random()){
+ const g=new THREE.Group();scene.add(g);g.position.set(x,0,z);
+ const color=rank>1?mat(0x7c55e8,.3):mats.slime;
+ const b=sphere(rank>1?.65:.48,color,0,.45,0,g);b.scale.set(1.1,.8,1);sphere(.12,mats.white,-.17,.55,.36,g);sphere(.12,mats.white,.17,.55,.36,g);sphere(.055,mats.dark,-.17,.55,.46,g);sphere(.055,mats.dark,.17,.55,.46,g);
+ const label=addLabel(g,rank>1?'ELITE SLIME':'Slime',rank>1?0xc8a4ff:0x9bff89);label.position.y=1.35;
+ enemies.set(id,{id,type,mesh:g,hp:rank>1?100:45,maxHp:rank>1?100:45,rank,attack:0,respawn:0,server:id!=='local'+id});
+}
+function feed(msg){const d=document.createElement('div');d.textContent='✦ '+msg;$('feed').prepend(d);setTimeout(()=>d.remove(),7500)}
+function notice(msg){$('notice').textContent=msg;setTimeout(()=>{if($('notice').textContent===msg)$('notice').textContent=''},1800)}
+function updateUI(){
+ $('playerLabel').textContent=`${me.name} · Lv. ${level}`;$('hpText').textContent=`${Math.max(0,Math.ceil(hp))} / ${maxHp}`;$('hpFill').style.width=Math.max(0,hp/maxHp*100)+'%';$('xpText').textContent=`${xp} / ${level*100}`;$('xpFill').style.width=(xp/(level*100)*100)+'%';$('goldText').textContent='🪙 '+gold;$('potionCount').textContent=potions+'x';$('coreCount').textContent=cores+'x';$('bagGold').textContent=gold;
+ $('questProgress').textContent=`Slime dikalahkan: ${Math.min(kills,3)} / 3`;
+ if(kills>=3){$('questTitle').textContent='Forest Guardian';$('questDesc').textContent='Kamu membuktikan kemampuanmu! Teruslah berburu dan bantu adventurer lain.';$('questProgress').textContent='Quest selesai ✓'}
+}
+function gainXP(n){xp+=n;while(xp>=level*100){xp-=level*100;level++;maxHp+=15;hp=maxHp;feed(`LEVEL UP! Kamu sekarang Lv. ${level}. Max HP meningkat!`);notice('✦ LEVEL UP ✦')}updateUI()}
+function hurt(n){if(invuln>0)return;hp-=n;invuln=.6;if(hp<=0){hp=1;me.pos.set(0,0,9);playerMesh.position.copy(me.pos);gold=Math.max(0,gold-5);notice('Kamu kembali ke shrine · -5 gold');feed('Kamu tumbang dan kembali ke shrine.')}updateUI()}
+function attack(power=1,range=3.3){
+ if(!started||attackCooldown>0)return;attackCooldown=.48;
+ let target=null,dist=range+1;
+ for(const e of enemies.values()){if(e.hp<=0)continue;const d=me.pos.distanceTo(e.mesh.position);if(d<dist){dist=d;target=e}}
+ if(target&&dist<=range){const dmg=Math.round((18+level*4)*power);target.hp-=dmg;socket.emit('enemyHit',{id:target.id,damage:dmg});target.mesh.scale.set(1.15,.8,1.15);setTimeout(()=>target.mesh.scale.set(1,1,1),100);feed(`Serangan mengenai ${target.rank>1?'Elite Slime':'Slime'} · ${dmg} damage`);if(target.hp<=0){killEnemy(target)}}
+ else{feed('Tidak ada monster dalam jangkauan. Dekati slime!')}
+}
+function killEnemy(e){if(e._dead)return;e._dead=true;kills++;gold+=e.rank>1?18:8;cores++;gainXP(e.rank>1?55:25);socket.emit('enemyKilled',{id:e.id});feed(`Monster dikalahkan! +${e.rank>1?18:8} gold · +${e.rank>1?55:25} XP`);updateUI();e.hp=0;e.mesh.visible=false;setTimeout(()=>{if(e.mesh){scene.remove(e.mesh);enemies.delete(e.id)}},5000)}
+function skill(){if(skillCooldown>0){notice('Arcane Burst sedang cooldown!');return}skillCooldown=5;let hit=0;for(const e of enemies.values()){if(e.hp<=0)continue;if(me.pos.distanceTo(e.mesh.position)<6){const dmg=42+level*6;e.hp-=dmg;hit++;if(e.hp<=0)killEnemy(e)}}const fx=sphere(1.2,new THREE.MeshBasicMaterial({color:0x66eaff,transparent:true,opacity:.65}),me.pos.x,.8,me.pos.z);fx.scale.set(1,1,.3);let t=0;const anim=()=>{t+=.08;fx.scale.setScalar(1+t*4);fx.material.opacity=Math.max(0,.65-t*.07);if(t<9)requestAnimationFrame(anim);else scene.remove(fx)};anim();notice(`ARCANE BURST · ${hit} target`);socket.emit('skill',{x:me.pos.x,z:me.pos.z,radius:6});}
+function dodge(){if(dodgeTime>0)return;dodgeTime=.24;invuln=.5;me.pos.x+=Math.sin(me.rot)*-2;me.pos.z+=Math.cos(me.rot)*-2;me.pos.x=Math.max(-WORLD,Math.min(WORLD,me.pos.x));me.pos.z=Math.max(-WORLD,Math.min(WORLD,me.pos.z));}
+function usePotion(){if(potions<=0){notice('Potion habis!');return}if(hp>=maxHp){notice('HP masih penuh!');return}potions--;hp=Math.min(maxHp,hp+40);feed('Minor Potion digunakan · +40 HP');updateUI()}
+function updateEnemies(dt,t){
+ for(const e of enemies.values()){if(e.hp<=0)continue;const p=e.mesh.position,d=p.distanceTo(me.pos);e.attack-=dt;
+ if(d<14){const dx=me.pos.x-p.x,dz=me.pos.z-p.z;if(d>1.7){p.x+=dx/d*dt*(e.rank>1?2.2:1.5);p.z+=dz/d*dt*(e.rank>1?2.2:1.5)}else if(e.attack<=0){e.attack=1.4;hurt(e.rank>1?13:7)}}
+ else{p.x+=Math.sin(t*.7+e.id.length)*dt*.3;p.z+=Math.cos(t*.6+e.id.length)*dt*.3}
+ e.mesh.position.y=.06+Math.abs(Math.sin(t*4+e.id.length))*.09;
+ }
+}
+function animate(){
+ requestAnimationFrame(animate);if(!scene)return;const dt=Math.min(clock.getDelta(),.04),t=clock.elapsedTime;
+ attackCooldown=Math.max(0,attackCooldown-dt);skillCooldown=Math.max(0,skillCooldown-dt);dodgeTime=Math.max(0,dodgeTime-dt);invuln=Math.max(0,invuln-dt);
+ if(started){
+ let x=move.x,z=move.z;if(keys.KeyW||keys.ArrowUp)z-=1;if(keys.KeyS||keys.ArrowDown)z+=1;if(keys.KeyA||keys.ArrowLeft)x-=1;if(keys.KeyD||keys.ArrowRight)x+=1;
+ const len=Math.hypot(x,z);if(len>.08){x/=len;z/=len;const speed=keys.ShiftLeft?8:5;me.pos.x+=x*speed*dt;me.pos.z+=z*speed*dt;me.rot=Math.atan2(x,z);playerMesh.rotation.y=me.rot;playerMesh.position.copy(me.pos);if(playerMesh.children[0])playerMesh.children[0].rotation.z=Math.sin(t*10)*.05}
+ me.pos.x=Math.max(-WORLD,Math.min(WORLD,me.pos.x));me.pos.z=Math.max(-WORLD,Math.min(WORLD,me.pos.z));playerMesh.position.copy(me.pos);
+ // Third-person follow camera, damped for smooth motion
+ const behind=new THREE.Vector3(Math.sin(me.rot)*-8,5.2,Math.cos(me.rot)*-8);const desired=me.pos.clone().add(behind);desired.y=5.2;camera.position.lerp(desired,1-Math.exp(-5.5*dt));camera.lookAt(me.pos.x,1.1,me.pos.z);
+ updateEnemies(dt,t);
+ if(Math.random()<.12)socket.emit('move',{x:me.pos.x,z:me.pos.z,rot:me.rot});
+ }
+ for(const p of players.values()){if(p.target){p.mesh.position.lerp(p.target,.22);p.mesh.rotation.y=p.rot||0}}
+ renderer.render(scene,camera);
+}
+function join(){
+ if(started)return;me.name=($('nameInput').value.trim()||'Adventurer').slice(0,16);started=true;$('modal').style.display='none';updateUI();socket.emit('join',{name:me.name,x:me.pos.x,z:me.pos.z});feed('Selamat datang di Aetherwood. Hunt slime untuk naik level!');}
+$('playBtn').onclick=join;$('nameInput').addEventListener('keydown',e=>{if(e.key==='Enter')join()});
+$('attackBtn').onclick=$('mAttack').onclick=()=>attack(1);$('skillBtn').onclick=$('mSkill').onclick=skill;$('dodgeBtn').onclick=$('mDodge').onclick=dodge;$('potionBtn').onclick=$('potionBtn2').onclick=usePotion;$('jumpBtn').onclick=()=>{playerMesh.position.y=.7;setTimeout(()=>{if(playerMesh)playerMesh.position.y=0},230)};
+$('invBtn').onclick=()=>{$('inventory').style.display=$('inventory').style.display==='block'?'none':'block'};$('potionBtn').onclick=usePotion;
+addEventListener('keydown',e=>{keys[e.code]=true;if(['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code))e.preventDefault();if(e.code==='KeyI')$('invBtn').click();if(e.code==='Space')attack();if(e.code==='KeyQ')skill();if(e.code==='KeyE')dodge();if(e.code==='Escape')$('inventory').style.display='none';if(e.code==='Enter'&&started&&document.activeElement!==$('chat'))$('chat').focus()});
+addEventListener('keyup',e=>keys[e.code]=false);
+let stickOn=false,stickId=null,stickCenter={x:0,y:0};const stick=$('stick'),nub=$('nub');
+stick.addEventListener('pointerdown',e=>{stickOn=true;stickId=e.pointerId;stick.setPointerCapture(e.pointerId);const r=stick.getBoundingClientRect();stickCenter={x:r.left+r.width/2,y:r.top+r.height/2};moveStick(e)});
+stick.addEventListener('pointermove',e=>{if(stickOn&&e.pointerId===stickId)moveStick(e)});function moveStick(e){let dx=e.clientX-stickCenter.x,dy=e.clientY-stickCenter.y,len=Math.hypot(dx,dy),max=38;if(len>max){dx=dx/len*max;dy=dy/len*max}nub.style.left=(34+dx)+'px';nub.style.top=(34+dy)+'px';move.x=dx/max;move.z=dy/max}
+function resetStick(){stickOn=false;move.x=0;move.z=0;nub.style.left='34px';nub.style.top='34px'}stick.addEventListener('pointerup',resetStick);stick.addEventListener('pointercancel',resetStick);
+$('sendChat').onclick=sendChat;$('chat').addEventListener('keydown',e=>{if(e.key==='Enter')sendChat()});function sendChat(){const input=$('chat'),msg=input.value.trim();if(!msg)return;socket.emit('chat',msg);input.value='';input.blur()}
+socket.on('connect',()=>{$('playersCount').textContent='🌐 Connected'});
+socket.on('init',data=>{if(data.players){for(const p of data.players)if(p.id!==socket.id)addRemote(p)}if(data.enemies){for(const e of data.enemies)syncEnemy(e)}});
+socket.on('playerJoined',p=>{if(p.id!==socket.id){addRemote(p);feed(`${p.name} memasuki realm.`)}});
+socket.on('playerMoved',p=>{const r=players.get(p.id);if(r){r.target.set(p.x,0,p.z);r.rot=p.rot}});
+socket.on('playerLeft',id=>{const p=players.get(id);if(p){scene.remove(p.mesh);players.delete(id)}});
+socket.on('count',n=>$('playersCount').textContent='👥 '+n+' online');
+socket.on('chat',d=>feed(`${d.name}: ${d.message}`));
+socket.on('enemyState',e=>syncEnemy(e));
+socket.on('enemyRespawn',e=>syncEnemy(e));
+socket.on('serverNotice',m=>feed(m));
+function addRemote(p){if(players.has(p.id)||!scene)return;const mesh=capsuleLike(mat(new THREE.Color().setHSL(Math.random(),.45,.48)));mesh.position.set(p.x||0,0,p.z||0);addLabel(mesh,p.name||'Adventurer');players.set(p.id,{mesh,target:new THREE.Vector3(p.x||0,0,p.z||0),rot:p.rot||0,name:p.name})}
+function syncEnemy(e){if(!e||!scene)return;let old=enemies.get(e.id);if(!old){spawnEnemyLocal(e.type||'slime',e.x,e.z,e.rank||1,e.id);old=enemies.get(e.id)}if(old){old.hp=e.hp;old.mesh.position.set(e.x,0,e.z);old.mesh.visible=e.hp>0;if(e.hp<=0){old.hp=0;old.mesh.visible=false}}}
+socket.on('connect_error',()=>{$('playersCount').textContent='⚠️ Offline';});
+init();
+</script>
+</body>
+</html>
